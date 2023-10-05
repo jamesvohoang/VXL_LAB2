@@ -26,7 +26,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum
+{
+  SEG0,
+  SEG1,
+  SEG2,
+  SEG3
+}SegLed;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -43,7 +49,7 @@
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-uint8_t whichSegIsOn = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,20 +130,62 @@ void DisableSeg1()
 {
   HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
 }
-
-void SwitchSeg()
+void EnableSeg2()
 {
-  if(!whichSegIsOn)
+  HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 0);
+}
+void DisableSeg2()
+{
+  HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 1);
+}
+void EnableSeg3()
+{
+  HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, 0);
+}
+void DisableSeg3()
+{
+  HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, 1);
+}
+
+void ClearAllSeg()
+{
+  DisableSeg0();
+  DisableSeg1();
+  DisableSeg2();
+  DisableSeg3();
+}
+
+void SwitchSeg(SegLed led)
+{
+  switch (led)
   {
-    EnableSeg1();
-    DisableSeg0();
-  }
-  else
-  {
+  case SEG0:
+    ClearAllSeg();
     EnableSeg0();
-    DisableSeg1();
+    display7SEG(1);
+    break;
+
+  case SEG1:
+    ClearAllSeg();
+    EnableSeg1();
+    display7SEG(2);
+    break;
+
+  case SEG2:
+    ClearAllSeg();
+    EnableSeg2();
+    display7SEG(3);
+    break;
+
+  case SEG3:
+    ClearAllSeg();
+    EnableSeg3();
+    display7SEG(0);
+    break;
+
+  default:
+    break;
   }
-  whichSegIsOn = 1 - whichSegIsOn;
 }
 /* USER CODE END 0 */
 
@@ -173,6 +221,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   setTimer1(100);
+  setTimer2(50);
+
+  //int count = 0;
+  SegLed whichSegIsOn = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -182,6 +234,23 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if(timer1_flag)
+    {
+      HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
+      setTimer1(100);
+    }
+    if(timer2_flag)
+    {
+      SwitchSeg(whichSegIsOn);
+
+      whichSegIsOn++;
+      if(whichSegIsOn >= 4)
+        whichSegIsOn = 0;
+
+      setTimer2(50);
+    }
+
+    HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
@@ -283,17 +352,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOT_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, EN0_Pin|EN1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
                           |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA5 EN0_Pin EN1_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|EN0_Pin|EN1_Pin;
+  /*Configure GPIO pins : DOT_Pin PA5 EN0_Pin EN1_Pin
+                           EN2_Pin EN3_Pin */
+  GPIO_InitStruct.Pin = DOT_Pin|GPIO_PIN_5|EN0_Pin|EN1_Pin
+                          |EN2_Pin|EN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
