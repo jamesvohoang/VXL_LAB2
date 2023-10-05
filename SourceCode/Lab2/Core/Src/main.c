@@ -43,11 +43,12 @@
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t whichSegIsOn = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -56,6 +57,88 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void DisplayNum(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8_t e, uint8_t f, uint8_t g )
+{
+    HAL_GPIO_WritePin(SEG0_GPIO_Port, SEG0_Pin, a);
+    HAL_GPIO_WritePin(SEG1_GPIO_Port, SEG1_Pin, b);
+    HAL_GPIO_WritePin(SEG2_GPIO_Port, SEG2_Pin, c);
+    HAL_GPIO_WritePin(SEG3_GPIO_Port, SEG3_Pin, d);
+    HAL_GPIO_WritePin(SEG4_GPIO_Port, SEG4_Pin, e);
+    HAL_GPIO_WritePin(SEG5_GPIO_Port, SEG5_Pin, f);
+    HAL_GPIO_WritePin(SEG6_GPIO_Port, SEG6_Pin, g);
+}
+
+void display7SEG(int num)
+{
+  switch (num)
+  {
+  case 0:
+    DisplayNum(0, 0, 0, 0, 0, 0, 1);
+    break;
+  case 1:
+    DisplayNum(1, 0, 0, 1, 1, 1, 1);
+    break;
+  case 2:
+    DisplayNum(0, 0, 1, 0, 0, 1, 0);
+    break;
+  case 3:
+    DisplayNum(0, 0, 0, 0, 1, 1, 0);
+    break;
+  case 4:
+    DisplayNum(1, 0, 0, 1, 1, 0, 0);
+    break;
+  case 5:
+    DisplayNum(0, 1, 0, 0, 1, 0, 0);
+    break;
+  case 6:
+    DisplayNum(0, 1, 0, 0, 0, 0, 0);
+    break;
+  case 7:
+    DisplayNum(0, 0, 0, 1, 1, 1, 1);
+    break;
+  case 8:
+    DisplayNum(0, 0, 0, 0, 0, 0, 0);
+    break;
+  case 9:
+    DisplayNum(0, 0, 0, 0, 1, 0, 0);
+    break;
+  
+  default:
+    break;
+  }
+}
+
+void EnableSeg0()
+{
+  HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 0);
+}
+void DisableSeg0()
+{
+  HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 1);
+}
+void EnableSeg1()
+{
+  HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 0);
+}
+void DisableSeg1()
+{
+  HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
+}
+
+void SwitchSeg()
+{
+  if(!whichSegIsOn)
+  {
+    EnableSeg1();
+    DisableSeg0();
+  }
+  else
+  {
+    EnableSeg0();
+    DisableSeg1();
+  }
+  whichSegIsOn = 1 - whichSegIsOn;
+}
 /* USER CODE END 0 */
 
 /**
@@ -85,9 +168,11 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_GPIO_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim2);
+  setTimer1(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -182,8 +267,56 @@ static void MX_TIM2_Init(void)
 
 }
 
-/* USER CODE BEGIN 4 */
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, EN0_Pin|EN1_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
+                          |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PA5 EN0_Pin EN1_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|EN0_Pin|EN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SEG0_Pin SEG1_Pin SEG2_Pin SEG3_Pin
+                           SEG4_Pin SEG5_Pin SEG6_Pin */
+  GPIO_InitStruct.Pin = SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
+                          |SEG4_Pin|SEG5_Pin|SEG6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback ( TIM_HandleTypeDef * htim )
+{
+  timerRun();
+}
 /* USER CODE END 4 */
 
 /**
