@@ -49,7 +49,8 @@ typedef enum
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
-
+SegLed whichSegIsOn = 0;
+int hour = 15 , minute = 8 , second = 50;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -155,32 +156,70 @@ void ClearAllSeg()
   DisableSeg3();
 }
 
-void SwitchSeg(SegLed led)
+void update7SEG(SegLed led)
 {
   switch (led)
   {
   case SEG0:
     ClearAllSeg();
     EnableSeg0();
-    display7SEG(1);
+    //display7SEG(1);
     break;
 
   case SEG1:
     ClearAllSeg();
     EnableSeg1();
-    display7SEG(2);
+    //display7SEG(2);
     break;
 
   case SEG2:
     ClearAllSeg();
     EnableSeg2();
-    display7SEG(3);
+    //display7SEG(3);
     break;
 
   case SEG3:
     ClearAllSeg();
     EnableSeg3();
-    display7SEG(0);
+    //display7SEG(0);
+    break;
+
+  default:
+    break;
+  }
+}
+
+void updateClockBuffer()
+{
+  int temp = 0;
+  switch (whichSegIsOn)
+  {
+  case SEG0:
+    temp = hour/10;
+    display7SEG(temp);
+    break;
+  
+  case SEG1:
+    temp = hour;
+    while (temp >= 10)
+    {
+      temp = temp - 10;
+    }
+    display7SEG(temp);
+    break;
+  
+  case SEG2:
+    temp = minute/10;
+    display7SEG(temp);
+    break;
+  
+  case SEG3:
+    temp = minute;
+    while(minute >= 10)
+    {
+      temp = temp - 10;
+    }
+    display7SEG(temp);
     break;
 
   default:
@@ -224,13 +263,33 @@ int main(void)
   setTimer2(100);
 
   //int count = 0;
-  SegLed whichSegIsOn = 0;
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    second++;
+    if (second >= 60)
+    {
+        second = 0;
+        minute++;
+    }
+
+    if(minute >= 60)
+    {
+        minute = 0;
+        hour++;
+    }
+
+    if(hour >=24)
+    {
+        hour = 0;
+    }
+
+    updateClockBuffer();
+    //HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -241,7 +300,7 @@ int main(void)
     }
     if(timer2_flag)
     {
-      SwitchSeg(whichSegIsOn);
+      update7SEG(whichSegIsOn);
 
       whichSegIsOn++;
       if(whichSegIsOn >= 4)
@@ -250,7 +309,7 @@ int main(void)
       setTimer2(100);
     }
 
-    HAL_Delay(10);
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
