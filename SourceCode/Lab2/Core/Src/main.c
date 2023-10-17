@@ -221,7 +221,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   setTimer1(100);
-  setTimer2(50);
+  setTimer2(100);
 
   //int count = 0;
   SegLed whichSegIsOn = 0;
@@ -247,7 +247,7 @@ int main(void)
       if(whichSegIsOn >= 4)
         whichSegIsOn = 0;
 
-      setTimer2(50);
+      setTimer2(100);
     }
 
     HAL_Delay(10);
