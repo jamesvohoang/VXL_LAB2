@@ -270,26 +270,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    second++;
-    if (second >= 60)
-    {
-        second = 0;
-        minute++;
-    }
-
-    if(minute >= 60)
-    {
-        minute = 0;
-        hour++;
-    }
-
-    if(hour >=24)
-    {
-        hour = 0;
-    }
-
-    updateClockBuffer();
-    //HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -298,8 +278,30 @@ int main(void)
       HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
       setTimer1(100);
     }
+
     if(timer2_flag)
     {
+      second++;
+
+      if (second >= 60)
+      {
+          second = 0;
+          minute++;
+      }
+
+      if(minute >= 60)
+      {
+          minute = 0;
+          hour++;
+      }
+
+      if(hour >=24)
+      {
+          hour = 0;
+      }
+
+      updateClockBuffer();
+      //HAL_Delay(1000);
       update7SEG(whichSegIsOn);
 
       whichSegIsOn++;
@@ -309,7 +311,7 @@ int main(void)
       setTimer2(100);
     }
 
-    HAL_Delay(1000);
+    HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
